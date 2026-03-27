@@ -64,16 +64,39 @@ Test calls HealingEngine.findElement(driver, By.id("login-btn"))
 
 ---
 
-## ✨ Enterprise Features Implemented
+## ✨ Enterprise Features (Under the Hood)
 
-| Feature | Detail |
-|---|---|
-| 📷 **Multimodal Vision Healing** | Streams a Base64 visual layer of your browser to the AI along with the DOM, allowing it to literally *see* the missing buttons layout structure. |
-| 🛡️ **Dynamic StaleProxy** | Every element returned to you is safely wrapped in a Java Reflection `InvocationHandler`. If a DOM reload throws a `StaleElementReferenceException`, the proxy immediately catches it mid-click, statically re-acquires the element, and executes flawlessly! |
-| 📁 **DB Locator Persistence** | Successful AI predictions are permanently mapped into `test-output/healed-locators.json`. The framework checks its own memory first, so identical test runs process at infinite speeds without costing you API tokens. |
-| 📊 **Interactive Dashboard** | A standalone vanilla HTML/JS Web UI generates automatically into `test-output/dashboard.html` tracking exactly what locators the AI healed across your test suites dynamically. |
-| 🏆 **Ranked Fallbacks** | Rather than gambling on one guess, the AI returns an array of up to three strategies (Fallback to Xpaths, Parent classes, etc.). The Engine cascades through them until one sticks. |
-| 🎚️ **Confidence Enforcer** | A strict configuration gate `healing.confidence.threshold=0.85`. Bypasses any hallucinated AI locators mathematically evaluated below an 85% stability confidence match minimum. |
+Here is exactly how the 6 core AI capabilities are engineered into the framework's architecture:
+
+### 📷 1. Multimodal Vision Healing
+* **Where:** `ScreenshotUtil.captureBase64()` & `AIClient.buildRequestBody()`
+* **How:** When a locator fails, the framework triggers Selenium's `OutputType.BASE64` to capture a raw string format of the browser screen. In `AIClient`, the JSON payload shifts from a standard text array to a GPT-4 Vision structure, streaming your browser's visual layout directly into the LLM context.
+* **Why:** DOM structures ("div soup") lack visual geometry. If the AI only reads code, it might suggest a locator for a "Login" button that is actually hidden. Vision completely grounds the LLM, forcing it to correlate the visual button coordinates with the actual DOM tag.
+
+### 🛡️ 2. Dynamic StaleProxy
+* **Where:** `WebElementProxy.java` & `HealingEngine.findElement()`
+* **How:** The engine doesn't return a raw Selenium `WebElement`. It uses native Java Reflection (`Proxy.newProxyInstance()`) to wrap your element. When you run `.click()` and an internal `StaleElementReferenceException` triggers, the proxy catches the crash mid-air, silently re-runs `HealingEngine.findElement()`, reattaches the new element object, and pushes the `.click()` through successfully.
+* **Why:** Modern Single Page Applications (React, Angular) constantly rebuild the DOM dynamically. An element found on line 12 can become completely "Stale" by line 13. This proxy makes your tests virtually bulletproof against React hydration flakiness.
+
+### 📁 3. DB Locator Persistence
+* **Where:** `LocatorPersistenceUtil.java`
+* **How:** Maintains a thread-safe `ConcurrentHashMap` in memory mapping your "Faulty Locator" to the "AI Fixed Locator". The moment a test succeeds, it flashes this map to disk synchronously into `test-output/healed-locators.json`. The `HealingEngine` checks this cache *before* doing anything else.
+* **Why:** Pinging the OpenAI API takes 3 to 10 seconds and costs tokens. If a locator breaks, it will likely stay broken across 500 different backend tests. Memory persistence means the AI penalty is paid exactly **once**. When test #2 hits the same broken button, it instantly applies the cached fix bypassing the network call entirely.
+
+### 📊 4. Interactive Dashboard
+* **Where:** `DashboardGenerator.java`
+* **How:** Invoked at the tail-end of a successful AI heal, it reads the `healed-locators.json` database and injects the mappings into a pre-styled CSS/Vanilla HTML template layout. It color-codes the confidence scores (Green >90%, Red <80%) and dynamically spits out the `test-output/dashboard.html` artifact file.
+* **Why:** Test engineers need observability. If an AI silently heals 400 locators in the dark, the main repository codebase rots and accumulates technical debt. The dashboard allows human SDETs to check reports and see exactly which locator strings they physically need to go update in their Page Object Models for the next sprint.
+
+### 🏆 5. Ranked Fallbacks
+* **Where:** `LocatorParser.java` & `heal-locator-prompt.txt`
+* **How:** The system prompt explicitly commands the LLM to return a JSON Array of up to 3 objects ranked by logic value. The `LocatorParser` unpacks this string into a `List<SuggestedLocator>`. Inside `HealingEngine`, a loop iterates over the list wrapping guesses in a `try/catch`. If Guess #1 (CSS) fails, it instantly tries Guess #2 (Xpath fallback).
+* **Why:** AI predict text probabilistically. A suggested locator might look perfect on paper but fail because an invisible iframe sits over it. An array cascade mimics human debugging behavior—"If A fails, try B, then default to C"—yielding a wildly higher recovery success rate.
+
+### 🎚️ 6. Confidence Enforcer
+* **Where:** `ConfigReader.java` & `HealingEngine.java`
+* **How:** It queries `config.properties` for the `healing.confidence.threshold`. During the Ranked Fallback loop, an `if` gate checks `suggestion.getConfidence() < threshold`. If the math checks out too low, the loop throws a warning skip (`continue;`) and abandons that locator attempt. 
+* **Why:** LLMs hate saying "I don't know" and are prone to hallucinations. If a developer deleted the "Checkout" button entirely, the LLM might forcefully guess another random button trying to fulfill the prompt. Setting a strict 85% cut-off ensures that the automation framework allows the test step to authentically fail, rather than dangerously clicking a random link and spoofing a false positive.
 
 ---
 
