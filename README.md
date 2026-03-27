@@ -23,15 +23,13 @@ Watch the framework automatically detect a broken `By.id("login-btn")` selector,
 ### 🎬 Live Interactive Demo Simulator (For Interviews/Showcases)
 Want to pitch or present this architecture's flow to a recruiter or engineering manager without requiring them to boot up a full Java IDE or Selenium environment?
 
-Simply open **`test-output/simulate-demo.html`** in any modern web browser! 
+Simply download and open **`ai-healing-simulator.html`** in any modern web browser! 
 
 I built a completely standalone, stylized HTML/JavaScript split-screen simulation explicitly modeling exactly how the framework orchestrates your terminal test visually. It perfectly visualizes:
 1. Encountering the `NoSuchElementException` (Glowing red box).
 2. Triggering the Base64 AI Vision Scanner across the viewport.
 3. Engaging OpenAI, unpacking the array, matching thresholds, and applying the `[data-testid]` fix.
-4. Relocating the DOM cursor seamlessly.
-
-> **Tip:** You can use this exact HTML file as a backdrop for a presentation or easily record it using Loom to generate your GitHub repository's main showcase video!
+4. Clicking the successful button and automatically routing to the green **Success Dashboard**.
 
 ### 🔍 Step-by-Step Execution Flow:
 1. **The Trap:** The test suite script deliberately looks for a button that doesn't exist: `driver.findElement(By.id("login-btn"))`

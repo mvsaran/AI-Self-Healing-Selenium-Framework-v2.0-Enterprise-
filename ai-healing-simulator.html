@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>AI Self-Healing Demo Simulation</title>
+    <style>
+        body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; height: 100vh; background: #eef2f5; overflow: hidden; }
+        
+        /* Terminal UI (Left) */
+        .terminal-container { flex: 1; background: #1e1e1e; color: #d4d4d4; padding: 20px; font-family: 'Consolas', 'Courier New', monospace; font-size: 14px; line-height: 1.6; border-right: 4px solid #fff; box-shadow: 2px 0 10px rgba(0,0,0,0.1); display: flex; flex-direction: column; justify-content: flex-end; }
+        .terminal-header { font-weight: bold; background: #333; padding: 5px 10px; margin: -20px -20px 20px -20px; border-bottom: 2px solid #007acc; color: #fff;}
+        .log-line { opacity: 0; transform: translateY(10px); animation: fadeUp 0.3s forwards; margin-bottom: 4px; }
+        .log-info { color: #569cd6; }
+        .log-warn { color: #d7ba7d; font-weight: bold; }
+        .log-error { color: #f44747; font-weight: bold; }
+        .log-success { color: #4ec9b0; font-weight: bold; }
+        .log-report { color: #ce9178; }
+        
+        /* Browsers UI (Right) */
+        .browser-container { flex: 1; display: flex; flex-direction: column; }
+        .browser-header { background: #d1d5db; padding: 10px; display: flex; align-items: center; border-bottom: 1px solid #9ca3af; }
+        .browser-dots { display: flex; gap: 6px; margin-right: 15px; }
+        .dot { width: 12px; height: 12px; border-radius: 50%; }
+        .dot.r { background: #ef4444; } .dot.y { background: #eab308; } .dot.g { background: #22c55e; }
+        .browser-url { background: #fff; padding: 5px 15px; border-radius: 4px; flex: 1; font-size: 12px; color: #6b7280; font-family: monospace; }
+        .browser-content { flex: 1; background: #fff; display: flex; align-items: center; justify-content: center; position: relative; }
+        
+        /* Web App UI */
+        .login-box { border: 1px solid #e5e7eb; padding: 40px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); text-align: center; width: 300px; }
+        h2 { margin-top: 0; color: #1f2937; }
+        input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #d1d5db; border-radius: 4px; box-sizing: border-box; }
+        .btn { padding: 10px; background: #3b82f6; color: white; border: none; border-radius: 4px; width: 100%; font-weight: bold; position: relative; overflow: hidden; }
+        
+        /* Visual overlays */
+        .cursor { position: absolute; width: 24px; height: 24px; background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512" fill="%23000"><path d="M0 55.2V426c0 12.2 9.9 22.2 22.2 22.2 6 0 11.6-2.4 15.8-6.7L112 368h144c12.2 0 22.2-9.9 22.2-22.2V112c0-12.2-9.9-22.2-22.2-22.2H22.2C9.9 89.8 0 79.9 0 67.7V55.2z" opacity="0"/></svg>') no-repeat;
+                  background-image: url('data:image/svg+xml;utf8,<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5.5 2L11.5 22L14.5 15L21.5 12L5.5 2Z" fill="%231f2937" stroke="white" stroke-width="2"/></svg>');
+                  transition: all 0.8s ease-in-out; top: 80%; left: 80%; opacity: 0; z-index: 100; pointer-events: none; }
+        
+        .glow-error { box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.4); animation: pulseRed 1s infinite; }
+        .glow-success { box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.4); animation: pulseGreen 1s 2; }
+        .ai-scan { position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: #38bdf8; box-shadow: 0 0 10px #38bdf8, 0 0 20px #38bdf8; opacity: 0; z-index: 50; }
+        
+        @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulseRed { 50% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0.6); } }
+        @keyframes pulseGreen { 50% { box-shadow: 0 0 0 6px rgba(34, 197, 94, 0.6); } }
+        @keyframes scanMove { 0% { top: 0; } 100% { top: 100%; } }
+        
+        #terminal { display: flex; flex-direction: column; gap: 2px; height: 100%; }
+    </style>
+</head>
+<body>
+
+    <div class="terminal-container">
+        <div class="terminal-header">PS C:\Projects\AI-Framework> mvn test</div>
+        <div id="terminal"></div>
+    </div>
+
+    <div class="browser-container">
+        <div class="browser-header">
+            <div class="browser-dots"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div></div>
+            <div class="browser-url">http://app.local/login</div>
+        </div>
+        <div class="browser-content" id="webpage">
+            <div class="ai-scan" id="scanner"></div>
+            <div class="cursor" id="cursor"></div>
+            
+            <div class="login-box" id="login-box">
+                <h2>Welcome Back</h2>
+                <input type="text" placeholder="Username" value="admin">
+                <input type="password" placeholder="Password" value="••••••••">
+                <!-- Missing the original id="login-btn", developer changed it! -->
+                <button class="btn" id="real-button" data-testid="signin-btn">Secure Login</button>
+            </div>
+            
+            <div class="success-dashboard" id="success-dash" style="display: none; padding: 40px; text-align: center;">
+                <h2>Welcome, mvsarankumar!</h2>
+                <div style="background: #22c55e; color: white; padding: 15px; border-radius: 6px; margin: 20px 0; font-weight: bold; animation: fadeUp 0.5s;">
+                    ✅ Secure Login Successful!
+                </div>
+                <p style="color: #6b7280;">Selenium Test Scenario Completed.<br>AI Framework completely bypassed the broken string.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const term = document.getElementById('terminal');
+        const cursor = document.getElementById('cursor');
+        const btn = document.getElementById('real-button');
+        const scanner = document.getElementById('scanner');
+        let delay = 1000;
+
+        function log(msg, cls) {
+            setTimeout(() => {
+                const div = document.createElement('div');
+                div.className = 'log-line ' + cls;
+                div.innerHTML = msg;
+                term.appendChild(div);
+                term.scrollTop = term.scrollHeight;
+            }, delay);
+        }
+
+        // Sequence
+        log('<span class="log-info">[INFO]</span> Tests starting...', '');
+        delay += 800;
+        log('<span class="log-info">[INFO]</span> WebDriver started. Running LoginTest.java', '');
+        delay += 1000;
+        log('<span class="log-info">[INFO]</span> driver.findElement(By.id("login-btn")).click();', '');
+        
+        // Move cursor blindly
+        setTimeout(() => {
+            cursor.style.opacity = '1';
+            cursor.style.top = '20%';
+            cursor.style.left = '20%';
+        }, delay);
+        
+        delay += 1500;
+        log('<span class="log-error">[CRITICAL]</span> NoSuchElementException: no element found for By.id("login-btn")', 'log-error');
+        
+        // Cursor looks confused
+        setTimeout(() => {
+            document.getElementById('login-box').classList.add('glow-error');
+            cursor.style.top = '40%'; cursor.style.left = '40%';
+        }, delay);
+
+        delay += 1200;
+        log('<span class="log-warn">[HEALING]</span> Activating AI Self-Healing Engine...', 'log-warn');
+        delay += 800;
+        log('<span class="log-info">[HEALING]</span> Capturing Base64 Viewport & extracting 6000 chars of DOM...', 'log-info');
+        
+        // AI Scan effect
+        setTimeout(() => {
+            scanner.style.opacity = '1';
+            scanner.style.animation = 'scanMove 1.5s linear 1';
+        }, delay);
+
+        delay += 1800;
+        log('<span class="log-info">[HEALING]</span> Transmitting visual context to OpenAI (gpt-4o-mini)...', 'log-info');
+        
+        delay += 2500;
+        log('<span class="log-success">[HEALING]</span> Received AI response! Confidence > 85%', 'log-success');
+        delay += 800;
+        
+        // Fix and push cursor
+        setTimeout(() => {
+            document.getElementById('login-box').classList.remove('glow-error');
+            const rect = btn.getBoundingClientRect();
+            cursor.style.top = (rect.top + 15) + 'px';
+            cursor.style.left = (rect.left + 50) + 'px';
+            btn.classList.add('glow-success');
+        }, delay);
+
+        log('<span class="log-success">[HEALING]</span> 🟢 Ranked Locator Succeeded: <b>[cssSelector] \'[data-testid="signin-btn"]\'</b>', 'log-success');
+        
+        delay += 1000;
+        const report = `
++----------------------------------------------------+<br>
+|        AI SELF-HEALING ATTEMPT REPORT              |<br>
++----------------------------------------------------+<br>
+| Status     : ✅ SUCCESS<br>
+| Original   : [id] 'login-btn'<br>
+| AI Suggest : [cssSelector] '[data-testid="signin-btn"]'<br>
+| Confidence : 95%<br>
+| Reason     : The element uses a stable data-testid.<br>
++----------------------------------------------------+<br>
+`;
+        log(report, 'log-report');
+
+        delay += 1000;
+        log('<span class="log-info">[INFO]</span> Successfully healed and mapped to test-output/healed-locators.json', 'log-info');
+        
+        // SIMULATE BUTTON BEING CLICKED
+        setTimeout(() => {
+            btn.innerHTML = "Logging In...";
+            btn.style.background = "#22c55e";
+        }, delay);
+        
+        // TRANSITION TO HOME PAGE
+        delay += 1500;
+        setTimeout(() => {
+            document.getElementById('login-box').style.display = 'none';
+            document.getElementById('success-dash').style.display = 'block';
+            document.querySelector('.browser-url').innerHTML = 'http://app.local/dashboard/welcome';
+            cursor.style.opacity = '0'; // Hide cursor
+        }, delay);
+
+        delay += 500;
+        log('<span class="log-info">[INFO]</span> Expected URL http://app.local/dashboard/welcome verified.', 'log-info');
+        log('<span class="log-info">[INFO]</span> Tests pass: 1, Failures: 0, Skips: 0', 'log-success');
+        
+    </script>
+</body>
+</html>
