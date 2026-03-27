@@ -16,8 +16,7 @@ This framework integrates a persistent, intelligent AI proxy directly into the S
 
 Watch the framework automatically detect a broken `By.id("login-btn")` selector, consult OpenAI Vision, and dynamically recover the test using `data-testid="signin-btn"`!
 
-![AI Self-Healing Step-by-Step Demo](demo-video.gif)
-*(To the user reading: Please record a 20-second screen capture of you running `mvn test`, save it as `demo-video.gif` or a `.mp4` in the root directory, and replace this placeholder image so recruiters can visually see the magic!)*
+![AI Self-Healing Dashboard Video](demo-video.webp)
 
 ### 🔍 Step-by-Step Execution Flow:
 1. **The Trap:** The test suite script deliberately looks for a button that doesn't exist: `driver.findElement(By.id("login-btn"))`
