@@ -43,6 +43,9 @@ public class LoginTest extends BaseTest {
         log.info("  INTENTIONALLY USING A BROKEN LOCATOR...");
         log.info("  By.id(\"login-btn\") [does NOT exist on page]");
         log.info("==============================================");
+        
+        // ── DELAY FOR VIDEO RECORDING DEMO ─────────────────────────────
+        try { Thread.sleep(3000); } catch (Exception e) {}
 
         // ── Use HealingEngine instead of raw driver.findElement ───────
         // The broken locator will trigger AI healing automatically
@@ -53,6 +56,10 @@ public class LoginTest extends BaseTest {
         Assert.assertTrue(signInButton.isDisplayed(), "Healed button should be visible");
 
         log.info("Clicking the Sign In button (found via AI healing)...");
+        
+        // ── DELAY FOR VIDEO RECORDING DEMO ─────────────────────────────
+        try { Thread.sleep(3000); } catch (Exception e) {}
+        
         signInButton.click();
 
         // After clicking Sign In, the demo page shows a success message
