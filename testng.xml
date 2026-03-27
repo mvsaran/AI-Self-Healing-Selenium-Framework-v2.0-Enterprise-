@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<suite name="AI Self-Healing Selenium Suite" verbose="1">
+
+    <test name="Healing Demo Tests">
+        <classes>
+            <class name="com.aiheal.tests.LoginTest"/>
+        </classes>
+    </test>
+
+</suite>

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN" monitorInterval="30">
+
+    <Properties>
+        <!-- Log directory (relative to project root) -->
+        <Property name="LOG_DIR">test-output/logs</Property>
+        <Property name="LOG_PATTERN">%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %c{1} - %msg%n</Property>
+        <Property name="CONSOLE_PATTERN">%d{HH:mm:ss} [%-5level] %c{1} - %msg%n</Property>
+    </Properties>
+
+    <Appenders>
+
+        <!-- Console output (colour-coded if terminal supports ANSI) -->
+        <Console name="ConsoleAppender" target="SYSTEM_OUT">
+            <PatternLayout pattern="${CONSOLE_PATTERN}"/>
+        </Console>
+
+        <!-- Rolling file appender — new log file per day -->
+        <RollingFile name="FileAppender"
+                     fileName="${LOG_DIR}/framework.log"
+                     filePattern="${LOG_DIR}/framework-%d{yyyy-MM-dd}.log.gz">
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy />
+                <SizeBasedTriggeringPolicy size="10MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="10"/>
+        </RollingFile>
+
+    </Appenders>
+
+    <Loggers>
+        <!-- Framework-specific logger (DEBUG for detailed healing steps) -->
+        <Logger name="com.aiheal" level="DEBUG" additivity="false">
+            <AppenderRef ref="ConsoleAppender"/>
+            <AppenderRef ref="FileAppender"/>
+        </Logger>
+
+        <!-- Selenium / WebDriver logs — keep at WARN to reduce noise -->
+        <Logger name="org.openqa.selenium" level="WARN" additivity="false">
+            <AppenderRef ref="ConsoleAppender"/>
+        </Logger>
+
+        <!-- Root logger — INFO for everything else -->
+        <Root level="INFO">
+            <AppenderRef ref="ConsoleAppender"/>
+            <AppenderRef ref="FileAppender"/>
+        </Root>
+    </Loggers>
+
+</Configuration>

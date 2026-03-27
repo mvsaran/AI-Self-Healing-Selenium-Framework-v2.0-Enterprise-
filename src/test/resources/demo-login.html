@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo Login Page — AI Self-Healing Selenium Framework</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .card {
+            background: rgba(255,255,255,0.07);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 20px;
+            padding: 48px 40px;
+            width: 400px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+
+        h1 {
+            color: #e2e8f0;
+            font-size: 1.7rem;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            color: #94a3b8;
+            font-size: 0.85rem;
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        label {
+            color: #cbd5e1;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 14px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 10px;
+            color: #f1f5f9;
+            font-size: 0.95rem;
+            margin-bottom: 20px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input:focus { border-color: #6366f1; }
+
+        /* 
+         * ⚠️  INTENTIONAL LOCATOR MISMATCH ⚠️
+         *
+         * The button below uses data-testid="signin-btn"
+         * The test intentionally uses  By.id("login-btn")  which DOES NOT EXIST.
+         * The AI healing engine will detect this and suggest the correct locator.
+         */
+        button[data-testid="signin-btn"] {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+            font-size: 1rem;
+            font-weight: 700;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            letter-spacing: 0.5px;
+            transition: opacity 0.2s, transform 0.1s;
+        }
+
+        button[data-testid="signin-btn"]:hover { opacity: 0.9; transform: translateY(-1px); }
+        button[data-testid="signin-btn"]:active { transform: translateY(0); }
+
+        .badge {
+            margin-top: 20px;
+            background: rgba(99,102,241,0.15);
+            border: 1px solid rgba(99,102,241,0.3);
+            border-radius: 8px;
+            padding: 10px 14px;
+            color: #a5b4fc;
+            font-size: 0.78rem;
+            line-height: 1.6;
+        }
+
+        #success-message {
+            display: none;
+            margin-top: 20px;
+            background: rgba(16,185,129,0.15);
+            border: 1px solid rgba(16,185,129,0.4);
+            border-radius: 10px;
+            padding: 16px;
+            text-align: center;
+            color: #6ee7b7;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+<div class="card">
+    <h1>🔐 Sign In</h1>
+    <p class="subtitle">AI Self-Healing Selenium Demo</p>
+
+    <label for="username">Username</label>
+    <input type="text" id="username" name="username" placeholder="Enter your username" />
+
+    <label for="password">Password</label>
+    <input type="password" id="password" name="password" placeholder="Enter your password" />
+
+    <!--
+        NOTE FOR TESTERS:
+        The test uses:  By.id("login-btn")        ← DOES NOT EXIST
+        Actual element: data-testid="signin-btn"  ← THIS IS THE REAL LOCATOR
+
+        The AI healing engine should detect the mismatch and automatically
+        suggest: By.cssSelector("[data-testid='signin-btn']")
+    -->
+    <button data-testid="signin-btn" type="button" onclick="handleLogin()">
+        Sign In
+    </button>
+
+    <div class="badge">
+        🤖 <strong>Healing Test Info</strong><br>
+        Broken locator: <code>By.id("login-btn")</code><br>
+        Real locator: <code>[data-testid="signin-btn"]</code><br>
+        AI should heal and click this button successfully.
+    </div>
+
+    <div id="success-message">
+        ✅ Login Successful!<br>
+        <small style="color:#94a3b8; font-weight:400;">AI self-healing worked perfectly.</small>
+    </div>
+</div>
+
+<script>
+    function handleLogin() {
+        var msg = document.getElementById('success-message');
+        msg.style.display = 'block';
+        msg.style.animation = 'fadeIn 0.4s ease';
+    }
+</script>
+</body>
+</html>

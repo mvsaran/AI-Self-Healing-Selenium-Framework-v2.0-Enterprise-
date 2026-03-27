@@ -1,0 +1,23 @@
+# Maven build output
+target/
+
+# IDE files
+.idea/
+*.iml
+.vscode/
+*.classpath
+*.project
+.settings/
+
+# Logs and test output
+test-output/
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Secrets — NEVER commit your API key
+*.env
+.env
+secrets.properties
